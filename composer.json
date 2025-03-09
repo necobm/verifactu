@@ -7,30 +7,28 @@
     "authors": [
         {
             "name": "José David Guillén",
-            "email": "jd@infdj.com"
+            "email": "jd@infdj.com",
+            "homepage": "https://git.jd.guillen.io/jdg/verifactu"
         }
     ],
     "require": {
         "php": ">=8.0",
-        "ext-hash": "*",
-        "guzzlehttp/guzzle": "^7.0"
+        "ext-hash": "*"
     },
     "require-dev": {
-        "phpunit/phpunit": "^10.0",
-        "friendsofphp/php-cs-fixer": "^3.0"
+        "phpunit/phpunit": "^10.0"
     },
     "autoload": {
         "psr-4": {
-            "Verifactu\\": "src/"
+            "jdg\\verifactu\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Verifactu\\Tests\\": "tests/"
+            "jdg\\verifactu\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "test": "vendor/bin/phpunit",
-        "fix": "vendor/bin/php-cs-fixer fix"
+        "test": "vendor/bin/phpunit"
     }
 }

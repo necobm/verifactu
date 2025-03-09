@@ -1,0 +1,7 @@
+# App
+/vendor/
+/composer.lock
+
+# Tests
+/tests/output/*.*
+!/tests/output/.gitignore
