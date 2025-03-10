@@ -6,7 +6,7 @@ class VeriFactuHashGenerator
     /**
      * The required fields for the invoice.
      */
-    private static $requiredFields = [
+    private static $invoiceRequiredFields = [
         'IDEmisorFactura',
         'NumSerieFactura',
         'FechaExpedicionFactura',
@@ -16,6 +16,30 @@ class VeriFactuHashGenerator
         'Huella',
         'FechaHoraHusoGenRegistro'
     ];
+    /**
+     * The required fields for the invoice cancellation.
+     */
+    private static $invoiceCancellationRequiredFields = [
+        'IDEmisorFacturaAnulada',
+        'NumSerieFacturaAnulada',
+        'FechaExpedicionFacturaAnulada',
+        'Huella',
+        'FechaHoraHusoGenRegistro'
+    ];
+    /**
+     * The required fields for the events.
+     */
+    private static $eventRequiredFields = [
+        'NIF_SistemaInformatico',
+        'ID',
+        'IdSistemaInformatico',
+        'Version',
+        'NumeroInstalacion',
+        'NIF',
+        'TipoEvento',
+        'HuellaEvento',
+        'FechaHoraHusoGenEvento',
+    ];
 
     /**
      * Generates the hash ("huella") for an invoice record.
@@ -24,15 +48,57 @@ class VeriFactuHashGenerator
      * @return string Generated hash in hexadecimal format (64 uppercase characters).
      * @throws \InvalidArgumentException if the data is invalid.
      */
-    public static function generateHash(array $data): string
+    public static function generateHashInvoice(array $data): string
     {
-        // Validate the input data
-        self::validateData($data);
+        self::validateData(self::$invoiceRequiredFields, $data);
+        $inputString = self::getFieldValue('IDEmisorFactura', $data['IDEmisorFactura']);
+        $inputString .= self::getFieldValue('NumSerieFactura', $data['NumSerieFactura']);
+        $inputString .= self::getFieldValue('FechaExpedicionFactura', $data['FechaExpedicionFactura']);
+        $inputString .= self::getFieldValue('TipoFactura', $data['TipoFactura']);
+        $inputString .= self::getFieldValue('CuotaTotal', $data['CuotaTotal']);
+        $inputString .= self::getFieldValue('ImporteTotal', $data['ImporteTotal']);
+        $inputString .= self::getFieldValue('Huella', $data['Huella']);
+        $inputString .= self::getFieldValue('FechaHoraHusoGenRegistro', $data['FechaHoraHusoGenRegistro'], false);
+        return strtoupper(hash('sha256', $inputString, false));
+    }
 
-        // Build the input string in the required format
-        $inputString = self::buildInputString($data);
-
-        // Apply the SHA-256 algorithm
+    /**
+     * Generates the hash ("huella") for an invoice cancellation record.
+     *
+     * @param array $data Invoice Cancellation record data in the correct order.
+     * @return string Generated hash in hexadecimal format (64 uppercase characters).
+     * @throws \InvalidArgumentException if the data is invalid.
+     */
+    public static function generateHashInvoiceCancellation(array $data): string
+    {
+        self::validateData(self::$invoiceCancellationRequiredFields, $data);
+        $inputString = self::getFieldValue('IDEmisorFacturaAnulada', $data['IDEmisorFacturaAnulada']);
+        $inputString .= self::getFieldValue('NumSerieFacturaAnulada', $data['NumSerieFacturaAnulada']);
+        $inputString .= self::getFieldValue('FechaExpedicionFacturaAnulada', $data['FechaExpedicionFacturaAnulada']);
+        $inputString .= self::getFieldValue('Huella', $data['Huella']);
+        $inputString .= self::getFieldValue('FechaHoraHusoGenRegistro', $data['FechaHoraHusoGenRegistro'], false);
+        return strtoupper(hash('sha256', $inputString, false));
+    }
+    
+    /**
+     * Generates the hash ("huella") for an event record.
+     *
+     * @param array $data Event record data in the correct order.
+     * @return string Generated hash in hexadecimal format (64 uppercase characters).
+     * @throws \InvalidArgumentException if the data is invalid.
+     */
+    public static function generateHashEvent(array $data): string
+    {
+        self::validateData(self::$eventRequiredFields, $data);
+        $inputString = self::getFieldValue('NIF', $data['NIF_SistemaInformatico']);
+        $inputString .= self::getFieldValue('ID', $data['ID']);
+        $inputString .= self::getFieldValue('IdSistemaInformatico', $data['IdSistemaInformatico']);
+        $inputString .= self::getFieldValue('Version', $data['Version']);
+        $inputString .= self::getFieldValue('NumeroInstalacion', $data['NumeroInstalacion']);
+        $inputString .= self::getFieldValue('NIF', $data['NIF']);
+        $inputString .= self::getFieldValue('TipoEvento', $data['TipoEvento']);
+        $inputString .= self::getFieldValue('HuellaEvento', $data['HuellaEvento']);
+        $inputString .= self::getFieldValue('FechaHoraHusoGenEvento', $data['FechaHoraHusoGenEvento'], false);
         return strtoupper(hash('sha256', $inputString, false));
     }
 
@@ -42,44 +108,30 @@ class VeriFactuHashGenerator
      * @param array $data Data to validate.
      * @throws \InvalidArgumentException if the data contains extra or missing fields.
      */
-    private static function validateData(array $data): void
+    private static function validateData(array $requiredFields, array $data): void
     {
-        // Ensure all required fields are present
-        $missingFields = array_diff(self::$requiredFields, array_keys($data));
+        $missingFields = array_diff($requiredFields, array_keys($data));
         if (!empty($missingFields)) {
             throw new \InvalidArgumentException('Missing required fields: ' . implode(', ', $missingFields));
         }
 
-        // Ensure no extra fields are present
-        $extraFields = array_diff(array_keys($data), self::$requiredFields);
+        $extraFields = array_diff(array_keys($data), $requiredFields);
         if (!empty($extraFields)) {
             throw new \InvalidArgumentException('Unexpected fields: ' . implode(', ', $extraFields));
         }
     }
 
     /**
-     * Builds the input string by trimming spaces and formatting numeric values correctly.
+     * Get the field and value string, including the optional separator
      *
-     * @param array $data Data to be concatenated.
+     * @param string $fieldName The name of the field.
+     * @param string $value The value of the field.
+     * @param bool $includeSeparator Whether to include the separator.
      * @return string Formatted string according to specifications.
      */
-    private static function buildInputString(array $data): string
+    private static function getFieldValue(string $fieldName, string $value, bool $includeSeparator=true): string
     {
-        $inputParts = [];
-        foreach ($data as $key => $value) {
-            // Trim spaces at the beginning and end
-            $value = trim($value);
-
-            // Properly format numeric values
-            if (is_numeric($value)) {
-                $value = rtrim(number_format((float)$value, 2, '.', ''), '0');
-                $value = rtrim($value, '.');
-            }
-
-            // Build the key=value format
-            $inputParts[] = "{$key}={$value}";
-        }
-
-        return implode('&', $inputParts);
+        $value = trim($value);
+        return "{$fieldName}={$value}" . ($includeSeparator ? '&' : '');
     }
 }
