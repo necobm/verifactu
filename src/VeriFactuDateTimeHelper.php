@@ -27,7 +27,7 @@ class VeriFactuDateTimeHelper
     }
 
     /**
-     * Formats a DateTime object or a date/time string into the specified format.
+     * Formats a DateTime object or a date/time string as d-m-Y (Ex. 25-01-2025).
      * 
      * @param DateTime|string $date The DateTime object or date/time string to format.
      * @return string The formatted date/time string.
@@ -47,6 +47,18 @@ class VeriFactuDateTimeHelper
             throw new Exception("Input must be a DateTime object or a date/time string.");
         }
         return $dateTime->format('d-m-Y');
+    }
+
+    /**
+     * Returns the current date and time in ISO 8601 format.
+     *
+     * @return string The current date and time in ISO 8601 format.
+     */
+    public static function nowIso8601():string
+    {
+        $dateTime = new DateTime();
+        $iso8601 = $dateTime->format(\DateTimeInterface::ATOM);        
+        return $iso8601;
     }
 
 }
