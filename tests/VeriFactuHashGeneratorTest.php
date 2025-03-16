@@ -28,7 +28,7 @@ class VeriFactuHashGeneratorTest extends TestCase
         $generatedHash = VeriFactuHashGenerator::generateHashInvoice($invoiceData);
 
         // Assert that the generated hash matches the expected hash
-        $this->assertEquals($expectedHash, $generatedHash);
+        $this->assertEquals($expectedHash, $generatedHash['hash']);
         $this->assertEquals($expectedHash, '3C464DAF61ACB827C65FDA19F352A4E3BDC2C640E9E9FC4CC058073F38F12F60');
     }
     /**
@@ -55,7 +55,7 @@ class VeriFactuHashGeneratorTest extends TestCase
         $generatedHash = VeriFactuHashGenerator::generateHashInvoice($invoiceData);
 
         // Assert that the generated hash matches the expected hash
-        $this->assertEquals($expectedHash, $generatedHash);
+        $this->assertEquals($expectedHash, $generatedHash['hash']);
         $this->assertEquals($expectedHash, 'F7B94CFD8924EDFF273501B01EE5153E4CE8F259766F88CF6ACB8935802A2B97');
     }
     /**
@@ -79,7 +79,7 @@ class VeriFactuHashGeneratorTest extends TestCase
         $generatedHash = VeriFactuHashGenerator::generateHashInvoiceCancellation($invoiceData);
 
         // Assert that the generated hash matches the expected hash
-        $this->assertEquals($expectedHash, $generatedHash);
+        $this->assertEquals($expectedHash, $generatedHash['hash']);
         $this->assertEquals($expectedHash, '177547C0D57AC74748561D054A9CEC14B4C4EA23D1BEFD6F2E69E3A388F90C68');
     }
 

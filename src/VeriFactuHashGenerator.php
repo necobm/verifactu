@@ -45,10 +45,10 @@ class VeriFactuHashGenerator
      * Generates the hash ("huella") for an invoice record.
      *
      * @param array $data Invoice record data in the correct order.
-     * @return string Generated hash in hexadecimal format (64 uppercase characters).
+     * @return string Generated hash in hexadecimal format (64 uppercase characters), and the input string.
      * @throws \InvalidArgumentException if the data is invalid.
      */
-    public static function generateHashInvoice(array $data): string
+    public static function generateHashInvoice(array $data): array
     {
         self::validateData(self::$invoiceRequiredFields, $data);
         $inputString = self::getFieldValue('IDEmisorFactura', $data['IDEmisorFactura']);
@@ -59,8 +59,12 @@ class VeriFactuHashGenerator
         $inputString .= self::getFieldValue('ImporteTotal', $data['ImporteTotal']);
         $inputString .= self::getFieldValue('Huella', $data['Huella']);
         $inputString .= self::getFieldValue('FechaHoraHusoGenRegistro', $data['FechaHoraHusoGenRegistro'], false);
-        return strtoupper(hash('sha256', $inputString, false));
+        $hash = strtoupper(hash('sha256', $inputString, false));
+        return ['hash' => $hash, 'inputString' => $inputString];
     }
+
+
+
 
     /**
      * Generates the hash ("huella") for an invoice cancellation record.
@@ -69,7 +73,7 @@ class VeriFactuHashGenerator
      * @return string Generated hash in hexadecimal format (64 uppercase characters).
      * @throws \InvalidArgumentException if the data is invalid.
      */
-    public static function generateHashInvoiceCancellation(array $data): string
+    public static function generateHashInvoiceCancellation(array $data): array
     {
         self::validateData(self::$invoiceCancellationRequiredFields, $data);
         $inputString = self::getFieldValue('IDEmisorFacturaAnulada', $data['IDEmisorFacturaAnulada']);
@@ -77,7 +81,8 @@ class VeriFactuHashGenerator
         $inputString .= self::getFieldValue('FechaExpedicionFacturaAnulada', $data['FechaExpedicionFacturaAnulada']);
         $inputString .= self::getFieldValue('Huella', $data['Huella']);
         $inputString .= self::getFieldValue('FechaHoraHusoGenRegistro', $data['FechaHoraHusoGenRegistro'], false);
-        return strtoupper(hash('sha256', $inputString, false));
+        $hash = strtoupper(hash('sha256', $inputString, false));
+        return ['hash' => $hash, 'inputString' => $inputString];
     }
     
     /**
@@ -87,7 +92,7 @@ class VeriFactuHashGenerator
      * @return string Generated hash in hexadecimal format (64 uppercase characters).
      * @throws \InvalidArgumentException if the data is invalid.
      */
-    public static function generateHashEvent(array $data): string
+    public static function generateHashEvent(array $data): array
     {
         self::validateData(self::$eventRequiredFields, $data);
         $inputString = self::getFieldValue('NIF', $data['NIF_SistemaInformatico']);
@@ -99,7 +104,8 @@ class VeriFactuHashGenerator
         $inputString .= self::getFieldValue('TipoEvento', $data['TipoEvento']);
         $inputString .= self::getFieldValue('HuellaEvento', $data['HuellaEvento']);
         $inputString .= self::getFieldValue('FechaHoraHusoGenEvento', $data['FechaHoraHusoGenEvento'], false);
-        return strtoupper(hash('sha256', $inputString, false));
+        $hash = strtoupper(hash('sha256', $inputString, false));
+        return ['hash' => $hash, 'inputString' => $inputString];
     }
 
     /**
