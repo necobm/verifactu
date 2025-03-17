@@ -1,5 +1,5 @@
 <?php 
-namespace jdg\Verifactu;
+namespace jdg\Verifactu\Listas;
 
 // L12 (SHA-256)
 enum L12: string {

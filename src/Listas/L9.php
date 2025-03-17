@@ -1,5 +1,5 @@
 <?php 
-namespace jdg\Verifactu;
+namespace jdg\Verifactu\Listas;
 
 // L9: Situación de la Operación
 enum L9: string {

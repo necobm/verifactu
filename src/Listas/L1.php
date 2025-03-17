@@ -1,5 +1,5 @@
 <?php 
-namespace jdg\Verifactu;
+namespace jdg\Verifactu\Listas;
 
 // L1: Tipos de Impuestos
 enum L1: string {

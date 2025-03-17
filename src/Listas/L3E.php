@@ -1,5 +1,5 @@
 <?php 
-namespace jdg\Verifactu;
+namespace jdg\Verifactu\Listas;
 
 // L3E: Sí/No
 enum L3E: string {
