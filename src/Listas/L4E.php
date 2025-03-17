@@ -1,8 +1,8 @@
 <?php 
 namespace jdg\Verifactu;
 
-// L6
-enum L16: string {
+// L4E: Destinatario/Tercero
+enum L4E: string {
     case DESTINATARIO = 'D';
     case TERCERO = 'T';
 
