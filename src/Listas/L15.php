@@ -1,8 +1,8 @@
 <?php 
 namespace jdg\Verifactu\Listas;
 
-// L12 (SHA-256)
-enum L12: string {
+// L15 (Version)
+enum L15: string {
     case V1 = '1.0';
 
     public function description(): string {

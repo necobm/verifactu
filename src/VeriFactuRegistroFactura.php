@@ -173,18 +173,30 @@ class VeriFactuRegistroFactura {
         $sistemaInfo->appendChild($dom->createElementNS($sum1Ns, 'sum1:IndicadorMultiplesOT', $invoiceRecord['RegistroFactura']['RegistroAlta']['SistemaInformatico']['IndicadorMultiplesOT']));
         $regAlta->appendChild($sistemaInfo);
 
-        $verifactuISO8601CreationTime = VeriFactuDateTimeHelper::nowIso8601();
-        $invoiceData = [
-            'IDEmisorFactura' => $invoiceRecord['Cabecera']['ObligadoEmision']['NIF'],
-            'NumSerieFactura' => $invoiceRecord['RegistroFactura']['RegistroAlta']['IDFactura']['NumSerieFactura'],
-            'FechaExpedicionFactura' => VeriFactuDateTimeHelper::formatDate($invoiceRecord['RegistroFactura']['RegistroAlta']['IDFactura']['FechaExpedicionFactura']),
-            'TipoFactura' => $invoiceRecord['RegistroFactura']['RegistroAlta']['TipoFactura'],
-            'CuotaTotal' => $cuotaTotal,
-            'ImporteTotal' => $importeTotal,
-            'Huella' => $huellaAnterior,
-            'FechaHoraHusoGenRegistro' => $verifactuISO8601CreationTime,
-        ];
-        list($huella, $cadenaHuella) = VeriFactuHashGenerator::generateHashInvoice($invoiceData);
+        $huella = '';
+        $verifactuISO8601CreationTime = '';
+        if (isset($invoiceRecord['RegistroFactura']['RegistroAlta']['FechaHoraHusoGenRegistro'])&&isset($invoiceRecord['RegistroFactura']['RegistroAlta']['Huella'])) {
+            $huella = $invoiceRecord['RegistroFactura']['RegistroAlta']['Huella'];
+            $verifactuISO8601CreationTime = $invoiceRecord['RegistroFactura']['RegistroAlta']['FechaHoraHusoGenRegistro'];
+        } else {
+            $verifactuISO8601CreationTime = VeriFactuDateTimeHelper::nowIso8601();
+            $invoiceData = [
+                'IDEmisorFactura' => $invoiceRecord['Cabecera']['ObligadoEmision']['NIF'],
+                'NumSerieFactura' => $invoiceRecord['RegistroFactura']['RegistroAlta']['IDFactura']['NumSerieFactura'],
+                'FechaExpedicionFactura' => VeriFactuDateTimeHelper::formatDate($invoiceRecord['RegistroFactura']['RegistroAlta']['IDFactura']['FechaExpedicionFactura']),
+                'TipoFactura' => $invoiceRecord['RegistroFactura']['RegistroAlta']['TipoFactura'],
+                'CuotaTotal' => $cuotaTotal,
+                'ImporteTotal' => $importeTotal,
+                'Huella' => $huellaAnterior,
+                'FechaHoraHusoGenRegistro' => $verifactuISO8601CreationTime,
+            ];
+            try {
+                $hashInvoice = VeriFactuHashGenerator::generateHashInvoice($invoiceData);
+                $huella = $hashInvoice['hash'];
+            } catch(\Exception $e) {
+                return ['error'=>'Error creataing hash', 'details'=>$e->getMessage()];
+            }
+        }
 
         // Elementos finales
         $regAlta->appendChild($dom->createElementNS($sum1Ns, 'sum1:FechaHoraHusoGenRegistro', $verifactuISO8601CreationTime));
