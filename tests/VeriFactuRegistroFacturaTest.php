@@ -50,7 +50,8 @@ class VeriFactuRegistroFacturaTest extends TestCase
                             'TipoImpositivo'=>'21',
                             'BaseImponibleOimporteNoSujeto'=>'100',
                             'CuotaRepercutida'=>'21',
-                        ]
+                        ],
+                        // ToDo :: Improve the test, adding "recargo de equivalencia"
                     ],
                     'Encadenamiento' => [
                         'RegistroAnterior' => [

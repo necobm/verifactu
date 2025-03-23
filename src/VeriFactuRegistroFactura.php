@@ -134,7 +134,9 @@ class VeriFactuRegistroFactura {
             $detalle1->appendChild($dom->createElementNS($sum1Ns, 'sum1:CuotaRepercutida', $detalleDesglose['CuotaRepercutida']));
             $desglose->appendChild($detalle1);
             $cuotaTotal = bcadd($cuotaTotal, $detalleDesglose['CuotaRepercutida'], 2);
-            $baseImponibleTotal = bcadd($baseImponibleTotal, $detalleDesglose['BaseImponibleOimporteNoSujeto'], 2);
+            if ($detalleDesglose['ClaveRegimen']!=Listas\L8A::RECARGO_EQUIVALENCIA->value) {
+                $baseImponibleTotal = bcadd($baseImponibleTotal, $detalleDesglose['BaseImponibleOimporteNoSujeto'], 2);
+            }
         }
         $regAlta->appendChild($desglose);
         
