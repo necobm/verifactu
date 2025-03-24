@@ -83,15 +83,9 @@ class VeriFactuRegistroFacturaTest extends TestCase
         ];
         $verifactu = new VeriFactuRegistroFactura();
         $ret = $verifactu->createXml($registroFactura);
-        /*
-        echo '-------------------------'."\n";
-        echo $ret['details'];
-        echo "\n".'-------------------------'."\n";
-        echo $ret['xml'];
-        echo "\n".'-------------------------'."\n";
-        */
         if ($ret['error']!='') {
             echo "\n-----------\n".$ret['details']."\n-----------\n";
+            // echo "\n-----------\n".$ret['xml']."\n-----------\n";
         }
         $xml = file_get_contents(__DIR__.'/testCreateXmlRegistroFacturaPrimerRegistro.xml');
         $this->assertFalse($xml===false, 'Error reading expected xml: '.print_r(error_get_last(),true));
@@ -100,4 +94,18 @@ class VeriFactuRegistroFacturaTest extends TestCase
         $this->assertEquals($hash, $ret['hash']);
         $this->assertEquals($timestampISO8601, $ret['timestampISO8601']);
     }
+
+
+
+    /**
+     * Test sending an XML fail (no certificate).
+     */
+    public function testSendXml_noCertificate_fail()
+    {
+        $xml = file_get_contents(__DIR__.'/testCreateXmlRegistroFacturaPrimerRegistro.xml');
+        $verifactu = new VeriFactuRegistroFactura();
+        $ret = $verifactu->sendXml($xml);
+        print_r($ret);
+    }
+
 }
