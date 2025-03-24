@@ -142,6 +142,20 @@ class VeriFactuRegistroFactura {
         
         // Cuotas e Importes
         $importeTotal = bcadd($cuotaTotal, $baseImponibleTotal, 2);
+
+        if (isset($invoiceRecord['RegistroFactura']['RegistroAlta']['CuotaTotal'])) {
+            $expected = bcadd($invoiceRecord['RegistroFactura']['RegistroAlta']['CuotaTotal'], 0, 2);
+            if ($expected != $cuotaTotal) {
+                return ['error'=>'Error checking totals', 'details'=>'La suma de cuotas en los desgloses no coincide con la cuota total.'];
+            }
+        }
+        if (isset($invoiceRecord['RegistroFactura']['RegistroAlta']['ImporteTotal'])) {
+            $expected = bcadd($invoiceRecord['RegistroFactura']['RegistroAlta']['ImporteTotal'], 0, 2);
+            if ($expected != $importeTotal) {
+                return ['error'=>'Error checking totals', 'details'=>'La suma de importes en los desgloses no coincide con el importe total.'];
+            }
+        }
+
         $regAlta->appendChild($dom->createElementNS($sum1Ns, 'sum1:CuotaTotal', $cuotaTotal));
         $regAlta->appendChild($dom->createElementNS($sum1Ns, 'sum1:ImporteTotal', $importeTotal));
         

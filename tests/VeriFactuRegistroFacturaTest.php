@@ -53,6 +53,8 @@ class VeriFactuRegistroFacturaTest extends TestCase
                         ],
                         // ToDo :: Improve the test, adding "recargo de equivalencia"
                     ],
+                    'CuotaTotal'=>'21.40',
+                    'ImporteTotal'=>'131.40',
                     'Encadenamiento' => [
                         'RegistroAnterior' => [
                             'IDEmisorFactura'=> 'K1111111I',    
