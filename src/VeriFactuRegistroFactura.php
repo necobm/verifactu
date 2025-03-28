@@ -1,206 +1,209 @@
 <?php
+
 namespace jdg\Verifactu;
 
 use jdg\Verifactu\VeriFactuDateTimeHelper;
 use jdg\Verifactu\VeriFactuStringHelper;
-use jdg\Verifactu\Listas\L12;
+use jdg\Verifactu\Listas;
+use jdg\Verifactu\Models;
 
-class VeriFactuRegistroFactura {
+use function PHPUnit\Framework\throwException;
+
+class VeriFactuRegistroFactura
+{
     private $wsdl;
     private $schemaBaseUrl;
+    private $location;
 
-    public function __construct($production = false) {
+    public function __construct($production = false)
+    {
         if ($production) {
             $this->wsdl = 'https://prewww2.aeat.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SistemaFacturacion.wsdl';
-            $this->schemaBaseUrl = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/';
+            $this->schemaBaseUrl = 'https://www1.agenciatributaria.gob.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP';
+            // ToDo :: Extract the location from the WSDL
+            $this->location = 'https://prewww1.aeat.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP';
         } else {
             $this->wsdl = 'https://prewww2.aeat.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SistemaFacturacion.wsdl';
             $this->schemaBaseUrl = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/';
+            $this->location = 'https://prewww1.aeat.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP';
         }
     }
 
-    public function sendXml(string $xml):array {
-        $ret = ['response'=>'','status'=>''];
+    public function send(Models\DsRegistroVeriFactu $dsRegistroVeriFactu, $certificatePath, $certificatePassphrase): array
+    {
+        $ret = ['request' => '', 'response' => '', 'status' => ''];
+
+        try {
+            $dsRegistroVeriFactuAsArray = $this->getAsArrayDsRegistroVeriFactu($dsRegistroVeriFactu);
+        } catch(\Exception $e) {
+            $ret['status'] = 'fail';
+            $ret['response'] = $e->getMessage();
+        }
+
+        $ret['hashes'] = [];
+        foreach($dsRegistroVeriFactuAsArray['RegistroFactura'] as $registroFactura) {
+            if (isset($registroFactura['RegistroAlta'])) {
+                $ret['hashes'] = [
+                    'NumSerieFactura' => $registroFactura['RegistroAlta']['IDFactura']['NumSerieFactura'],
+                    'Huella' => $registroFactura['RegistroAlta']['Huella'],
+                    'FechaHoraHusoGenRegistro' => $registroFactura['RegistroAlta']['FechaHoraHusoGenRegistro']
+                ];
+            } else 
+            if (isset($registroFactura['RegistroAnulacion'])) {
+                $ret['hashes'] = [
+                    'NumSerieFactura' => $registroFactura['RegistroAnulacion']['IDFactura']['NumSerieFactura'],
+                    'Huella' => $registroFactura['RegistroAnulacion']['Huella'],
+                    'FechaHoraHusoGenRegistro' => $registroFactura['RegistroAnulacion']['FechaHoraHusoGenRegistro']
+                ];
+            } else {
+                throw new \Exception('The data contains a non valid "RegistroFactura" type.');
+            } 
+        }
 
         $options = [
-            'trace' => 1,
+            'local_cert' => $certificatePath,
+            'passphrase' => $certificatePassphrase,
+            'trace' => true,
+            'exceptions' => true,
+            'cache_wsdl' => 0, // WSDL_CACHE_NONE,
             'stream_context' => stream_context_create([
                 'ssl' => [
-                    'verify_peer' => false,
-                    'ciphers' => 'DEFAULT:!DH'
-                ]
-            ])
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
+                    'allow_self_signed' => false,
+                    'crypto_method' => 33, // STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT,
+                ],
+            ]),
+            'soap_version' => SOAP_1_1,
+            'style' => SOAP_DOCUMENT,
+            'use' => SOAP_LITERAL
         ];
-        
+
+//      $client = new SoapClientDebugger($this->wsdl, $options);
         $client = new \SoapClient($this->wsdl, $options);
-        $client->__setSoapHeaders(/* Agrega cabeceras si son necesarias */);
-        
         try {
-            $response = $client->__soapCall('SuministroFacturacion', [
-                new \SoapVar($xml, XSD_ANYXML)
-            ]);
+            $client->__setLocation($this->location);
+            $client->__soapCall('RegFactuSistemaFacturacion', [$dsRegistroVeriFactuAsArray]);
+            $ret['request'] = $client->__getLastRequest();
             $ret['response'] = $client->__getLastResponse();
             $ret['status'] = 'sent';
         } catch (\SoapFault $e) {
-            $ret['response'] = $e->getMessage()."\n ---------------------------- \n".$client->__getLastRequest();
+            $ret['request'] = $client->__getLastRequest();
+            $lastResponse = $client->__getLastResponse();
+            if ( strpos($lastResponse, 'No se detecta certificado electr')!==false ) {
+                $ret['response'] = 'No se detecta certificado electrónico';
+            } else {
+                $ret['response'] = $e->getMessage();
+            }
             $ret['status'] = 'fail';
-        }        
+        }
         return $ret;
+    } 
+
+    private function getAsArrayRegistroAnulacion(Models\RegistroAnulacion $registroAnulacion):array {
+        throw new \Exception('Not implemented');
     }
 
-    public function createXml($invoiceRecord):array {
-        $ret = ['xml'=>'', 'error'=>''];
+    private function getAsArrayRegistroAlta(string $obligadoEmisionNif, Models\RegistroAlta $registroAlta):array {
+        $data = [
+                'IDVersion' => $registroAlta->IDVersion->value,
+                'IDFactura' => [
+                    'IDEmisorFactura' => $registroAlta->IDFactura->IDEmisorFactura,
+                    'NumSerieFactura' => $registroAlta->IDFactura->NumSerieFactura,
+                    'FechaExpedicionFactura' => VeriFactuDateTimeHelper::formatDate($registroAlta->IDFactura->FechaExpedicionFactura)
+                ],
+                'NombreRazonEmisor' => VeriFactuStringHelper::sanitizeString($registroAlta->NombreRazonEmisor),
+                'TipoFactura' => $registroAlta->TipoFactura->value,
+                'DescripcionOperacion' => VeriFactuStringHelper::sanitizeString($registroAlta->DescripcionOperacion),
+                'Destinatarios' => [],
+                'Desglose' => [],
+            ];
 
-        $dom = new \DOMDocument('1.0', 'UTF-8');
-        $dom->formatOutput = true;
-        
-        // Definir namespaces
-        $sumNs = $this->schemaBaseUrl.'SuministroLR.xsd';
-        $sum1Ns = $this->schemaBaseUrl.'SuministroInformacion.xsd';
-        $xdNs = 'http://www.w3.org/2000/09/xmldsig#';
-        
-        /*
-        $soapNs = 'http://schemas.xmlsoap.org/soap/envelope/';
-        // Crear elemento raíz SOAP
-        $envelope = $dom->createElementNS($soapNs, 'soapenv:Envelope');
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:sum', $sumNs);
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:sum1', $sum1Ns);
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xd', $xdNs);
-        $dom->appendChild($envelope);
-        
-        // Crear Body
-        $body = $dom->createElementNS($soapNs, 'soapenv:Body');
-        $envelope->appendChild($body);
-        
-        // RegFactuSistemaFacturacion
-        $regFactu = $dom->createElementNS($sumNs, 'sum:RegFactuSistemaFacturacion');
-        $body->appendChild($regFactu);
-        */
-        $regFactu = $dom->createElementNS($sumNs, 'sum:RegFactuSistemaFacturacion');
-        $regFactu->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:sum', $sumNs);
-        $regFactu->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:sum1', $sum1Ns);
-        $regFactu->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xd', $xdNs);
-        $dom->appendChild($regFactu);
-
-        
-
-        // Cabecera
-        $cabecera = $dom->createElementNS($sumNs, 'sum:Cabecera');
-        $obligado = $dom->createElementNS($sum1Ns, 'sum1:ObligadoEmision');
-        $obligado->appendChild($dom->createElementNS($sum1Ns, 'sum1:NombreRazon', VeriFactuStringHelper::sanitizeString($invoiceRecord['Cabecera']['ObligadoEmision']['NombreRazon'])));
-        $obligado->appendChild($dom->createElementNS($sum1Ns, 'sum1:NIF', $invoiceRecord['Cabecera']['ObligadoEmision']['NIF']));
-        $cabecera->appendChild($obligado);
-        $regFactu->appendChild($cabecera);
-        
-        // RegistroFactura
-        $registroFactura = $dom->createElementNS($sumNs, 'sum:RegistroFactura');
-        $regAlta = $dom->createElementNS($sum1Ns, 'sum1:RegistroAlta');
-        
-        // ID Version
-        $regAlta->appendChild($dom->createElementNS($sum1Ns, 'sum1:IDVersion', $invoiceRecord['RegistroFactura']['RegistroAlta']['IDVersion']));
-        
-        // IDFactura
-        $idFactura = $dom->createElementNS($sum1Ns, 'sum1:IDFactura');
-        $idFactura->appendChild($dom->createElementNS($sum1Ns, 'sum1:IDEmisorFactura', $invoiceRecord['RegistroFactura']['RegistroAlta']['IDFactura']['IDEmisorFactura']));
-        $idFactura->appendChild($dom->createElementNS($sum1Ns, 'sum1:NumSerieFactura', $invoiceRecord['RegistroFactura']['RegistroAlta']['IDFactura']['NumSerieFactura']));
-        $idFactura->appendChild($dom->createElementNS($sum1Ns, 'sum1:FechaExpedicionFactura', VeriFactuDateTimeHelper::formatDate($invoiceRecord['RegistroFactura']['RegistroAlta']['IDFactura']['FechaExpedicionFactura'])));
-        $regAlta->appendChild($idFactura);
-        
-        // Resto de elementos
-        $regAlta->appendChild($dom->createElementNS($sum1Ns, 'sum1:NombreRazonEmisor', VeriFactuStringHelper::sanitizeString($invoiceRecord['RegistroFactura']['RegistroAlta']['NombreRazonEmisor'])));
-        $regAlta->appendChild($dom->createElementNS($sum1Ns, 'sum1:TipoFactura', $invoiceRecord['RegistroFactura']['RegistroAlta']['TipoFactura']));
-        $regAlta->appendChild($dom->createElementNS($sum1Ns, 'sum1:DescripcionOperacion', VeriFactuStringHelper::sanitizeString($invoiceRecord['RegistroFactura']['RegistroAlta']['DescripcionOperacion'])));
-        
-        // Destinatarios
-        $destinatarios = $dom->createElementNS($sum1Ns, 'sum1:Destinatarios');
-        foreach($invoiceRecord['RegistroFactura']['RegistroAlta']['Destinatarios'] as $destinatario) {
-            $idDestinatario = $dom->createElementNS($sum1Ns, 'sum1:IDDestinatario');
-            $idDestinatario->appendChild($dom->createElementNS($sum1Ns, 'sum1:NombreRazon', VeriFactuStringHelper::sanitizeString($destinatario['NombreRazon'])));
-            $idDestinatario->appendChild($dom->createElementNS($sum1Ns, 'sum1:NIF', $destinatario['NIF']));
-            $destinatarios->appendChild($idDestinatario);
+        foreach ($registroAlta->Destinatarios as $destinatario) {
+            $data['Destinatarios'][] = [
+                'NombreRazon' => VeriFactuStringHelper::sanitizeString($destinatario->NombreRazon),
+                'NIF' => VeriFactuStringHelper::sanitizeString($destinatario->NIF)
+            ];
         }
-        $regAlta->appendChild($destinatarios);
         
+
         // Desglose (DetalleDesglose)
         $cuotaTotal = 0.0;
         $baseImponibleTotal = 0.0;
-        $desglose = $dom->createElementNS($sum1Ns, 'sum1:Desglose');
-        foreach($invoiceRecord['RegistroFactura']['RegistroAlta']['Desgloses'] as $detalleDesglose) {
-            $detalle1 = $dom->createElementNS($sum1Ns, 'sum1:DetalleDesglose');
-            $detalle1->appendChild($dom->createElementNS($sum1Ns, 'sum1:ClaveRegimen', $detalleDesglose['ClaveRegimen']));
-            $detalle1->appendChild($dom->createElementNS($sum1Ns, 'sum1:CalificacionOperacion', $detalleDesglose['CalificacionOperacion']));
-            $detalle1->appendChild($dom->createElementNS($sum1Ns, 'sum1:TipoImpositivo', $detalleDesglose['TipoImpositivo']));
-            $detalle1->appendChild($dom->createElementNS($sum1Ns, 'sum1:BaseImponibleOimporteNoSujeto', $detalleDesglose['BaseImponibleOimporteNoSujeto']));
-            $detalle1->appendChild($dom->createElementNS($sum1Ns, 'sum1:CuotaRepercutida', $detalleDesglose['CuotaRepercutida']));
-            $desglose->appendChild($detalle1);
-            $cuotaTotal = bcadd($cuotaTotal, $detalleDesglose['CuotaRepercutida'], 2);
-            if ($detalleDesglose['ClaveRegimen']!=Listas\L8A::RECARGO_EQUIVALENCIA->value) {
-                $baseImponibleTotal = bcadd($baseImponibleTotal, $detalleDesglose['BaseImponibleOimporteNoSujeto'], 2);
+        foreach ($registroAlta->Desgloses as $detalleDesglose) {
+            $data['Desglose'][] = [
+                    'ClaveRegimen' => $detalleDesglose->ClaveRegimen->value,
+                    'CalificacionOperacion' => $detalleDesglose->CalificacionOperacion->value,
+                    'TipoImpositivo' => $detalleDesglose->TipoImpositivo,
+                    'BaseImponibleOimporteNoSujeto' => $detalleDesglose->BaseImponibleOimporteNoSujeto,
+                    'CuotaRepercutida' => $detalleDesglose->CuotaRepercutida
+            ];
+
+            $cuotaTotal = bcadd($cuotaTotal, $detalleDesglose->CuotaRepercutida, 2);
+            if ($detalleDesglose->ClaveRegimen != Listas\L8A::RECARGO_EQUIVALENCIA) {
+                $baseImponibleTotal = bcadd($baseImponibleTotal, $detalleDesglose->BaseImponibleOimporteNoSujeto, 2);
             }
         }
-        $regAlta->appendChild($desglose);
-        
+
         // Cuotas e Importes
         $importeTotal = bcadd($cuotaTotal, $baseImponibleTotal, 2);
 
-        if (isset($invoiceRecord['RegistroFactura']['RegistroAlta']['CuotaTotal'])) {
-            $expected = bcadd($invoiceRecord['RegistroFactura']['RegistroAlta']['CuotaTotal'], 0, 2);
+        if (isset($registroAlta->CuotaTotal)) {
+            $expected = bcadd($registroAlta->CuotaTotal, 0, 2);
             if ($expected != $cuotaTotal) {
-                return ['error'=>'Error checking totals', 'details'=>'La suma de cuotas en los desgloses no coincide con la cuota total.'];
+                throw new \Exception('La suma de cuotas en los desgloses no coincide con la cuota total.');
             }
         }
-        if (isset($invoiceRecord['RegistroFactura']['RegistroAlta']['ImporteTotal'])) {
-            $expected = bcadd($invoiceRecord['RegistroFactura']['RegistroAlta']['ImporteTotal'], 0, 2);
-            if ($expected != $importeTotal) {
-                return ['error'=>'Error checking totals', 'details'=>'La suma de importes en los desgloses no coincide con el importe total.'];
-            }
+        $expected = bcadd($registroAlta->ImporteTotal, 0, 2);
+        if ($expected != $importeTotal) {
+            throw new \Exception('La suma de importes en los desgloses no coincide con el importe total.');
         }
+        $data['CuotaTotal'] = $cuotaTotal;
+        $data['ImporteTotal'] = $importeTotal;
 
-        $regAlta->appendChild($dom->createElementNS($sum1Ns, 'sum1:CuotaTotal', $cuotaTotal));
-        $regAlta->appendChild($dom->createElementNS($sum1Ns, 'sum1:ImporteTotal', $importeTotal));
-        
         // Encadenamiento
         $huellaAnterior = '';
-        $encadenamiento = $dom->createElementNS($sum1Ns, 'sum1:Encadenamiento');
-        if (!array_key_exists('Encadenamiento', $invoiceRecord['RegistroFactura']['RegistroAlta']) || !array_key_exists('RegistroAnterior', $invoiceRecord['RegistroFactura']['RegistroAlta']['Encadenamiento'])) {
-            $primerRegistro = $dom->createElementNS($sum1Ns, 'sum1:PrimerRegistro', 'S');
-            $encadenamiento->appendChild($primerRegistro);
+        if ($registroAlta->Encadenamiento->PrimerRegistro) {
+            $data['Encadenamiento'] = [
+                'PrimerRegistro' => 'S'
+            ];
         } else {
-            $huellaAnterior = $invoiceRecord['RegistroFactura']['RegistroAlta']['Encadenamiento']['RegistroAnterior']['Huella'];
-            $registroAnterior = $dom->createElementNS($sum1Ns, 'sum1:RegistroAnterior');
-            $registroAnterior->appendChild($dom->createElementNS($sum1Ns, 'sum1:IDEmisorFactura', $invoiceRecord['RegistroFactura']['RegistroAlta']['Encadenamiento']['RegistroAnterior']['IDEmisorFactura']));
-            $registroAnterior->appendChild($dom->createElementNS($sum1Ns, 'sum1:NumSerieFactura', $invoiceRecord['RegistroFactura']['RegistroAlta']['Encadenamiento']['RegistroAnterior']['NumSerieFactura']));
-            $registroAnterior->appendChild($dom->createElementNS($sum1Ns, 'sum1:FechaExpedicionFactura', VeriFactuDateTimeHelper::formatDate($invoiceRecord['RegistroFactura']['RegistroAlta']['Encadenamiento']['RegistroAnterior']['FechaExpedicionFactura'])));
-            $registroAnterior->appendChild($dom->createElementNS($sum1Ns, 'sum1:Huella', $huellaAnterior));
-            $encadenamiento->appendChild($registroAnterior);
+            $huellaAnterior = $registroAlta->Encadenamiento->RegistroAnterior->Huella;
+            $data['Encadenamiento'] = [
+                'RegistroAnterior' => [
+                    'IDEmisorFactura' => $registroAlta->Encadenamiento->RegistroAnterior->IDEmisorFactura,
+                    'NumSerieFactura' => $registroAlta->Encadenamiento->RegistroAnterior->NumSerieFactura,
+                    'FechaExpedicionFactura' => VeriFactuDateTimeHelper::formatDate($registroAlta->Encadenamiento->RegistroAnterior->FechaExpedicionFactura),
+                    'Huella' => $huellaAnterior
+                ]
+            ];
         }
-        $regAlta->appendChild($encadenamiento);
-        
+
         // SistemaInformatico
-        $sistemaInfo = $dom->createElementNS($sum1Ns, 'sum1:SistemaInformatico');
-        $sistemaInfo->appendChild($dom->createElementNS($sum1Ns, 'sum1:NombreRazon', $invoiceRecord['RegistroFactura']['RegistroAlta']['SistemaInformatico']['NombreRazon']));
-        $sistemaInfo->appendChild($dom->createElementNS($sum1Ns, 'sum1:NIF', $invoiceRecord['RegistroFactura']['RegistroAlta']['SistemaInformatico']['NIF']));
-        $sistemaInfo->appendChild($dom->createElementNS($sum1Ns, 'sum1:NombreSistemaInformatico', $invoiceRecord['RegistroFactura']['RegistroAlta']['SistemaInformatico']['NombreSistemaInformatico']));
-        $sistemaInfo->appendChild($dom->createElementNS($sum1Ns, 'sum1:IdSistemaInformatico', $invoiceRecord['RegistroFactura']['RegistroAlta']['SistemaInformatico']['IdSistemaInformatico']));
-        $sistemaInfo->appendChild($dom->createElementNS($sum1Ns, 'sum1:Version', $invoiceRecord['RegistroFactura']['RegistroAlta']['SistemaInformatico']['Version']));
-        $sistemaInfo->appendChild($dom->createElementNS($sum1Ns, 'sum1:NumeroInstalacion', $invoiceRecord['RegistroFactura']['RegistroAlta']['SistemaInformatico']['NumeroInstalacion']));
-        $sistemaInfo->appendChild($dom->createElementNS($sum1Ns, 'sum1:TipoUsoPosibleSoloVerifactu', $invoiceRecord['RegistroFactura']['RegistroAlta']['SistemaInformatico']['TipoUsoPosibleSoloVerifactu']));
-        $sistemaInfo->appendChild($dom->createElementNS($sum1Ns, 'sum1:TipoUsoPosibleMultiOT', $invoiceRecord['RegistroFactura']['RegistroAlta']['SistemaInformatico']['TipoUsoPosibleMultiOT']));
-        $sistemaInfo->appendChild($dom->createElementNS($sum1Ns, 'sum1:IndicadorMultiplesOT', $invoiceRecord['RegistroFactura']['RegistroAlta']['SistemaInformatico']['IndicadorMultiplesOT']));
-        $regAlta->appendChild($sistemaInfo);
+        $data['SistemaInformatico'] = [
+            'NombreRazon' => $registroAlta->SistemaInformatico->NombreRazon,
+            'NIF' => $registroAlta->SistemaInformatico->NIF,
+            'NombreSistemaInformatico' => $registroAlta->SistemaInformatico->NombreSistemaInformatico,
+            'IdSistemaInformatico' => $registroAlta->SistemaInformatico->IdSistemaInformatico,
+            'Version' => $registroAlta->SistemaInformatico->Version,
+            'NumeroInstalacion' => $registroAlta->SistemaInformatico->NumeroInstalacion,
+            'TipoUsoPosibleSoloVerifactu' => $registroAlta->SistemaInformatico->TipoUsoPosibleSoloVerifactu->value,
+            'TipoUsoPosibleMultiOT' => $registroAlta->SistemaInformatico->TipoUsoPosibleMultiOT->value,
+            'IndicadorMultiplesOT' => $registroAlta->SistemaInformatico->IndicadorMultiplesOT->value
+        ];
 
         $huella = '';
         $verifactuISO8601CreationTime = '';
-        if (isset($invoiceRecord['RegistroFactura']['RegistroAlta']['FechaHoraHusoGenRegistro'])&&isset($invoiceRecord['RegistroFactura']['RegistroAlta']['Huella'])) {
-            $huella = $invoiceRecord['RegistroFactura']['RegistroAlta']['Huella'];
-            $verifactuISO8601CreationTime = $invoiceRecord['RegistroFactura']['RegistroAlta']['FechaHoraHusoGenRegistro'];
+        if ($registroAlta->FechaHoraHusoGenRegistro!=null && $registroAlta->Huella!=null) {
+            $huella = $registroAlta->Huella;
+            $verifactuISO8601CreationTime = $registroAlta->FechaHoraHusoGenRegistro;
         } else {
             $verifactuISO8601CreationTime = VeriFactuDateTimeHelper::nowIso8601();
             $invoiceData = [
-                'IDEmisorFactura' => $invoiceRecord['Cabecera']['ObligadoEmision']['NIF'],
-                'NumSerieFactura' => $invoiceRecord['RegistroFactura']['RegistroAlta']['IDFactura']['NumSerieFactura'],
-                'FechaExpedicionFactura' => VeriFactuDateTimeHelper::formatDate($invoiceRecord['RegistroFactura']['RegistroAlta']['IDFactura']['FechaExpedicionFactura']),
-                'TipoFactura' => $invoiceRecord['RegistroFactura']['RegistroAlta']['TipoFactura'],
+                'IDEmisorFactura' => $obligadoEmisionNif,
+                'NumSerieFactura' => $registroAlta->IDFactura->NumSerieFactura,
+                'FechaExpedicionFactura' => VeriFactuDateTimeHelper::formatDate($registroAlta->IDFactura->FechaExpedicionFactura),
+                'TipoFactura' => $registroAlta->TipoFactura->value,
                 'CuotaTotal' => $cuotaTotal,
                 'ImporteTotal' => $importeTotal,
                 'Huella' => $huellaAnterior,
@@ -209,62 +212,67 @@ class VeriFactuRegistroFactura {
             try {
                 $hashInvoice = VeriFactuHashGenerator::generateHashInvoice($invoiceData);
                 $huella = $hashInvoice['hash'];
-            } catch(\Exception $e) {
-                return ['error'=>'Error creataing hash', 'details'=>$e->getMessage()];
+            } catch (\Exception $e) {
+                return ['error' => 'Error creataing hash', 'details' => $e->getMessage()];
             }
         }
 
         // Elementos finales
-        $regAlta->appendChild($dom->createElementNS($sum1Ns, 'sum1:FechaHoraHusoGenRegistro', $verifactuISO8601CreationTime));
-        $regAlta->appendChild($dom->createElementNS($sum1Ns, 'sum1:TipoHuella', L12::SHA256->value));
-        $regAlta->appendChild($dom->createElementNS($sum1Ns, 'sum1:Huella', $huella));
-        
-        // Ensamblar todo
-        $registroFactura->appendChild($regAlta);
-        $regFactu->appendChild($registroFactura);
-        
-        // Validar y mostrar XML
-        libxml_use_internal_errors(true);
-        if (!$dom->schemaValidate( __DIR__.'/xsd/SuministroLR.xsd' )) {
-            $ret['error'] = 'Schema validation failed';
-            $ret['details'] = $this->getXmlErrors();
-        }
-        libxml_clear_errors();
-
-        $xmlString = $dom->saveXML();
-        $ret['xml'] = $xmlString;
-        $ret['hash'] = $huella; 
-        $ret['timestampISO8601'] = $verifactuISO8601CreationTime;
-        return $ret;
+        $data['FechaHoraHusoGenRegistro'] =  $verifactuISO8601CreationTime;
+        $data['TipoHuella'] =  Listas\L12::SHA256->value;
+        $data['Huella'] =  $huella; 
+        return $data;
     }
 
-
-
-
-    private function getXmlErrors() {
-        $errors = libxml_get_errors();
-        $errorMessages = [];
-
-        foreach ($errors as $error) {
-            $errorMessages[] = $this->formatLibXmlError($error);
-        }
-
-        return implode("\n", $errorMessages); // Join errors into a single string
-    }
-
-    private function formatLibXmlError($error) {
-        $types = [
-            LIBXML_ERR_WARNING => "Warning",
-            LIBXML_ERR_ERROR => "Error",
-            LIBXML_ERR_FATAL => "Fatal Error"
+    private function getAsArrayDsRegistroVeriFactu(Models\DsRegistroVeriFactu $dsRegistroVeriFactu): array
+    {
+        $obligadoEmisionNif = $dsRegistroVeriFactu->Cabecera->ObligadoEmision->NIF;
+        $data = [
+            'Cabecera' => [
+                'ObligadoEmision'=>[
+                    'NombreRazon' => VeriFactuStringHelper::sanitizeString($dsRegistroVeriFactu->Cabecera->ObligadoEmision->NombreRazon),
+                    'NIF' => VeriFactuStringHelper::sanitizeString($obligadoEmisionNif)
+                ]
+            ],
+            'RegistroFactura' => []
         ];
-        
-        return sprintf(
-            "[%s] Line %d, Column %d: %s",
-            $types[$error->level] ?? "Unknown",
-            $error->line,
-            $error->column,
-            trim($error->message)
-        );
-    }    
+
+        /*
+        * @var Models\RegistroAnterior
+        */
+        $registroAnterior = null;
+        foreach($dsRegistroVeriFactu->RegistroFactura as $registroFactura) {
+            if ($registroFactura->RegistroAlta!=null) {
+                if ($registroAnterior!=null) {
+                    $registroFactura->RegistroAlta->Encadenamiento->RegistroAnterior = $registroAnterior;
+                }
+                $data['RegistroFactura'][] = ['RegistroAlta' => $this->getAsArrayRegistroAlta($obligadoEmisionNif, $registroFactura->RegistroAlta)];
+                $registroAnterior = new Models\RegistroAnterior(
+                    $obligadoEmisionNif,
+                    $registroFactura->RegistroAlta->IDFactura->NumSerieFactura,
+                    $registroFactura->RegistroAlta->IDFactura->FechaExpedicionFactura,
+                    $registroFactura->RegistroAlta->Huella
+                );
+            } else
+            if ($registroFactura->RegistroAnulacion!=null) {
+                if ($registroAnterior!=null) {
+                    $registroFactura->RegistroAnulacion->Encadenamiento->RegistroAnterior = $registroAnterior;
+                }
+                $data['RegistroFactura'][] = ['RegistroAnulacion' => $this->getAsArrayRegistroAnulacion($registroFactura->RegistroAnulacion)];
+                $registroAnterior = new Models\RegistroAnterior(
+                    $obligadoEmisionNif,
+                    'ToDo', //$registroFactura->RegistroAnulacion->IDFactura->NumSerieFactura,
+                    'ToDo', //$registroFactura->RegistroAnulacion->IDFactura->FechaExpedicionFactura,
+                    $registroFactura->RegistroAnulacion->Huella
+                );
+            }
+        }
+        return $data;
+    }
+/*
+[response] => looks like we got no XML document
+[response] => SOAP-ERROR: Encoding: object has no 'Cabecera' property
+[response] => No se detecta certificado electrónico
+[response] => Codigo[103].NIF no identificado: 99999972C/EIDAS CERTIFICADO PRUEBAS
+*/
 }
