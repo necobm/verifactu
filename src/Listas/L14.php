@@ -1,8 +1,8 @@
 <?php 
 namespace jdg\Verifactu\Listas;
 
-// L5: Sí/No
-enum L5: string {
+// L14: Sí/No
+enum L14: string {
     case SI = 'S';
     case NO = 'N';
 

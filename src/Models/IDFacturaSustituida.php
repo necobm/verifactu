@@ -1,10 +1,10 @@
 <?php
 namespace jdg\Verifactu\Models;
 
-class IDFactura
+class IDFacturaSustituida
 {
     /**
-     * Número de identificación fiscal (NIF) del obligado a expedir la factura.
+     * NIF del obligado a expedir la factura.
      */
     public string $IDEmisorFactura;
     /**

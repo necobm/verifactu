@@ -3,7 +3,13 @@ namespace jdg\Verifactu\Models;
 
 class RegistroFactura
 {
+    /**
+     * Datos del registro de facturación de alta. Ver su diseño de bloque: «RegistroAlta».
+     */
     public RegistroAlta $RegistroAlta;
+    /**
+     * Datos del registro de facturación de anulación. Ver su diseño de bloque: «RegistroAnulacion».
+     */
     public RegistroAnulacion $RegistroAnulacion;
 
     public function __construct(RegistroAlta|RegistroAnulacion|null $registro = null)

@@ -1,5 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
+use jdg\Verifactu\VeriFactuCertificateHelper;
 use jdg\Verifactu\VeriFactuRegistroFactura;
 use jdg\Verifactu\Models;
 use jdg\Verifactu\Listas;
@@ -34,44 +35,24 @@ class VeriFactuRegistroFacturaTest extends TestCase
     {
         $certificatePath = __DIR__.'/ACTIVO_EIDAS_CERTIFICADO_PRUEBAS___99999972C.p12';
         $passphrase = '1234';
-
-        $p12File = file_get_contents($certificatePath);
-        openssl_pkcs12_read($p12File, $certs, $passphrase);
-        $cert = $certs['cert'].$certs['pkey'];
-        $tempCertPath = $this->stringToTempFile($cert);
-        // $tempCertPath = __DIR__.'/certificado.pem';
+        $tempCertPath = VeriFactuCertificateHelper::fileP12toPEM($certificatePath, $passphrase);
 
         list($dsRegistroVeriFactu, $hash, $timestampISO8601) = $this->getSampleData();
 
         $verifactu = new VeriFactuRegistroFactura();
         $ret = $verifactu->send($dsRegistroVeriFactu, $tempCertPath, $passphrase);
+        /*
         if ($ret['status']=='fail') {
-            echo "\n -------------- \n";
+            echo "\n ------ REQUEST -------- \n";
             print_r($ret['request']);
             echo "\n -------------- \n";
-            print_r($ret['response']);
-            echo "\n -------------- \n";
         }
+        */
         $this->assertTrue($ret['status']=='fail', $ret['response']);
         $this->assertEquals('Codigo[103].NIF no identificado: 99999972C/EIDAS CERTIFICADO PRUEBAS', $ret['response']);
+        $this->assertTrue(file_get_contents(__DIR__.'/sampleData01.xml')==$ret['request'], $ret['request']);
 
         unlink($tempCertPath);
-    }
-
-
-    private function stringToTempFile(string $certificate): string|false
-    {
-        $tempFile = tempnam(sys_get_temp_dir(), 'cert_');
-        if ($tempFile === false) {
-            return false;
-        }
-
-        if (file_put_contents($tempFile, $certificate) === false) {
-            unlink($tempFile); // Elimina el archivo si hay un error
-            return false;
-        }
-
-        return $tempFile;
     }
 
 
