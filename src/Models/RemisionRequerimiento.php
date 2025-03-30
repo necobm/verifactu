@@ -1,5 +1,7 @@
 <?php
 namespace jdg\Verifactu\Models;
+use jdg\Verifactu\VeriFactuStringHelper;
+use jdg\Verifactu\Listas;
 
 class RemisionRequerimiento
 {
@@ -10,5 +12,12 @@ class RemisionRequerimiento
     /**
      * Indicador que especifica que se ha finalizado la remisión de registros de facturación tras un requerimiento, 
      */
-    public string $FinRequerimiento;
+    public Listas\L4 $FinRequerimiento;
+
+    public function toArray() {
+        return [
+            'RefRequerimiento'=> VeriFactuStringHelper::sanitizeString($this->RefRequerimiento),
+            'FinRequerimiento'=>$this->FinRequerimiento->value
+        ];
+    }
 }

@@ -2,31 +2,25 @@
 namespace jdg\Verifactu\Models;
 use jdg\Verifactu\VeriFactuStringHelper;
 
-class Destinatario
+class Tercero
 {
     /**
-     * Nombre-razón social del destinatario (a veces también denominado contraparte, es decir, el cliente) de la operación.
+     * Nombre-razón social del tercero que expida la factura.
      */
     public string $NombreRazon;
     /**
-     * Identificador del NIF del destinatario (a veces también denominado contraparte, es decir, el cliente) de la operación.
+     * Identificador del NIF del tercero que expida la factura.
      */
     public ?string $NIF = null;
     public ?IDOtro $IDOtro = null;
 
-    public function __construct(string $nif, ?string $nombreRazon=null, ?IDOtro $idOtro=null)
-    {
-        $this->NIF = $nif;
-        $this->NombreRazon = $nombreRazon;
-        $this->IDOtro = $idOtro;
-    }
-
     public function toArray() {
+
         $data = [
             'NombreRazon' => VeriFactuStringHelper::sanitizeString($this->NombreRazon)
         ];
         if (($this->NIF==null && $this->IDOtro==null) || ($this->NIF!=null && $this->IDOtro!=null)) {
-            throw new \Exception('Desinatario requiere NIF ó IDOtro.');
+            throw new \Exception('Tercero requiere NIF ó IDOtro.');
         }
         if ($this->NIF!=null) {
             $data['NIF'] = $this->NIF;

@@ -1,16 +1,19 @@
 <?php
 namespace jdg\Verifactu\Models;
+use jdg\Verifactu\VeriFactuDateTimeHelper;
+use jdg\Verifactu\VeriFactuStringHelper;
+use jdg\Verifactu\Listas;
 
 class RegistroFactura
 {
     /**
      * Datos del registro de facturación de alta. Ver su diseño de bloque: «RegistroAlta».
      */
-    public RegistroAlta $RegistroAlta;
+    public ?RegistroAlta $RegistroAlta = null;
     /**
      * Datos del registro de facturación de anulación. Ver su diseño de bloque: «RegistroAnulacion».
      */
-    public RegistroAnulacion $RegistroAnulacion;
+    public ?RegistroAnulacion $RegistroAnulacion = null;
 
     public function __construct(RegistroAlta|RegistroAnulacion|null $registro = null)
     {
@@ -31,5 +34,12 @@ class RegistroFactura
 
     public function setRegistroAnulacion(RegistroAnulacion $registroAnulacion) {
         $this->RegistroAnulacion = $registroAnulacion;
+    }
+
+    public function toArray() {
+        if ($this->RegistroAlta != null) {
+            return ['RegistroAlta'=>$this->RegistroAlta->toArray()];
+        }
+        return ['RegistroAnulacion'=>$this->RegistroAnulacion->toArray()];
     }
 }

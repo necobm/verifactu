@@ -68,12 +68,13 @@ class VeriFactuRegistroFacturaTest extends TestCase
 
         $cabecera = new Models\Cabecera();
         $cabecera->ObligadoEmision = new Models\ObligadoEmision($obligadoNif, $obligadoNombre);
+
         $registroAlta = new Models\RegistroAlta();
         $registroAlta->IDVersion = Listas\L15::V1;
         $registroAlta->IDFactura = new Models\IDFactura();
         $registroAlta->IDFactura->IDEmisorFactura = $obligadoNif;
         $registroAlta->IDFactura->NumSerieFactura = 'A/2025012345';
-        $registroAlta->IDFactura->FechaExpedicionFactura = '22-03-2025'; //date('Y-m-d'),
+        $registroAlta->IDFactura->FechaExpedicionFactura = new \DateTime('2025-03-22');
         $registroAlta->NombreRazonEmisor = $obligadoNombre;
         $registroAlta->TipoFactura = Listas\L2::F1;
         $registroAlta->DescripcionOperacion = 'Factura de venta';
@@ -98,7 +99,7 @@ class VeriFactuRegistroFacturaTest extends TestCase
         $registroAlta->CuotaTotal = '21.40';
         $registroAlta->ImporteTotal = '131.40';
 
-        $registroAnterior = new Models\RegistroAnterior($obligadoNif,'A/2025012344','22-03-2025','3C464DAF61ACB827C65FDA19F352A4E3BDC2C640E9E9FC4CC058073F38F12F60');
+        $registroAnterior = new Models\RegistroAnterior($obligadoNif,'A/2025012344',new \DateTime('2025-03-22'),'3C464DAF61ACB827C65FDA19F352A4E3BDC2C640E9E9FC4CC058073F38F12F60');
         $registroAlta->Encadenamiento = new Models\Encadenamiento($registroAnterior);
         $registroAlta->SistemaInformatico = new Models\SistemaInformatico();
         $registroAlta->SistemaInformatico->NombreRazon = '11111111H';
@@ -116,8 +117,10 @@ class VeriFactuRegistroFacturaTest extends TestCase
         $registroAlta->FechaHoraHusoGenRegistro = $timestampISO8601;
 
         $registroFactura = new Models\RegistroFactura($registroAlta);
+        // $registroFactura->add(/* add more records */);
+        // $registroFactura->add(/* add more records */);
+        
         $dsRegistroVeriFactu =  new Models\DsRegistroVeriFactu($cabecera, $registroFactura);
-
         return [$dsRegistroVeriFactu, $hash, $timestampISO8601];
     }
 }

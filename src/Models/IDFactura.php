@@ -1,5 +1,7 @@
 <?php
 namespace jdg\Verifactu\Models;
+use jdg\Verifactu\VeriFactuDateTimeHelper;
+use jdg\Verifactu\VeriFactuStringHelper;
 
 class IDFactura
 {
@@ -14,13 +16,13 @@ class IDFactura
     /**
      * Fecha de expedición de la factura.
      */
-    public string $FechaExpedicionFactura;
+    public \DateTime $FechaExpedicionFactura;
 
     public function toArray() {
         return [
             'IDEmisorFactura' => $this->IDEmisorFactura,
-            'NumSerieFactura' => $this->NumSerieFactura,
-            'FechaExpedicionFactura' => $this->FechaExpedicionFactura
+            'NumSerieFactura' => VeriFactuStringHelper::sanitizeString($this->NumSerieFactura),
+            'FechaExpedicionFactura' => VeriFactuDateTimeHelper::formatDate($this->FechaExpedicionFactura)
         ];
     }
 }

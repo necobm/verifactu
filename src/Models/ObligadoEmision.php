@@ -17,4 +17,11 @@ class ObligadoEmision
         $this->NombreRazon = $nombreRazon;
         $this->NIF = $nif;
     }
+
+    public function toArray() {
+        return [
+            'NombreRazon' => $this->NombreRazon,
+            'NIF' => $this->NIF
+        ];
+    }
 }
