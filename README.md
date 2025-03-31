@@ -2,11 +2,7 @@ VERIFACTU es una librería PHP diseñada para facilitar el cumplimiento de los n
 
 ## Funcionalidades Principales:
 
-* Generación de Huella: Implementa los algoritmos necesarios para la creación de la huella digital de los registros de factura, conforme a las especificaciones de la AEAT.
-* Generación de XML: Permite la creación de los archivos XML con el formato requerido por la AEAT para el envío de los registros de factura.
-* Envío a la AEAT: Facilita la comunicación con la AEAT para el envío electrónico de los registros de factura, simplificando el proceso de cumplimiento. *(pendiente)*
-* Validación de datos: Permite la validación de los datos para la correcta creacion de la huella, la correcta creación del XML y el envio de la factura a la AEAT.
-* Documentación Detallada: Incluye documentación completa y ejemplos de uso para una fácil integración en tus proyectos. *(pendiente)*
+* **Creación y Envío Fácil de Registros a la AEAT:** Simplifica todo el proceso, desde la generación de la información necesaria (huella digital, XML) hasta el envío electrónico de los registros de factura a la AEAT, haciendo el cumplimiento más sencillo y eficiente.
 
 ### Objetivo:
 
