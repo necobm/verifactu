@@ -1,5 +1,5 @@
 <?php 
-namespace jdg\Verifactu\Listas;
+namespace jdgOpenCode\verifactu\Listas;
 
 // L6: Destinatario/Tercero
 enum L6: string {

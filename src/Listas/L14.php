@@ -1,5 +1,5 @@
 <?php 
-namespace jdg\Verifactu\Listas;
+namespace jdgOpenCode\verifactu\Listas;
 
 // L14: Sí/No
 enum L14: string {

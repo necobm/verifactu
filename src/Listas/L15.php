@@ -1,5 +1,5 @@
 <?php 
-namespace jdg\Verifactu\Listas;
+namespace jdgOpenCode\verifactu\Listas;
 
 // L15 (Version)
 enum L15: string {

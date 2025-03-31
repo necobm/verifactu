@@ -1,5 +1,5 @@
 <?php 
-namespace jdg\Verifactu\Listas;
+namespace jdgOpenCode\verifactu\Listas;
 
 // L7: Documentos de Identificación
 enum L7: string {

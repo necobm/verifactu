@@ -1,10 +1,10 @@
 <?php
-namespace jdg\Verifactu;
+namespace jdgOpenCode\verifactu;
 
-use jdg\Verifactu\VeriFactuDateTimeHelper;
-use jdg\Verifactu\VeriFactuStringHelper;
-use jdg\Verifactu\Listas;
-use jdg\Verifactu\Models;
+use jdgOpenCode\verifactu\VeriFactuDateTimeHelper;
+use jdgOpenCode\verifactu\VeriFactuStringHelper;
+use jdgOpenCode\verifactu\Listas;
+use jdgOpenCode\verifactu\Models;
 
 class VeriFactuRegistroFactura
 {

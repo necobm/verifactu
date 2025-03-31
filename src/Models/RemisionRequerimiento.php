@@ -1,7 +1,7 @@
 <?php
-namespace jdg\Verifactu\Models;
-use jdg\Verifactu\VeriFactuStringHelper;
-use jdg\Verifactu\Listas;
+namespace jdgOpenCode\verifactu\Models;
+use jdgOpenCode\verifactu\VeriFactuStringHelper;
+use jdgOpenCode\verifactu\Listas;
 
 class RemisionRequerimiento
 {

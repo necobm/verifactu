@@ -1,5 +1,5 @@
 <?php
-namespace jdg\Verifactu;
+namespace jdgOpenCode\verifactu;
 use DateTime;
 use Exception;
 

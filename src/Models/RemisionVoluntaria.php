@@ -1,7 +1,7 @@
 <?php
-namespace jdg\Verifactu\Models;
-use jdg\Verifactu\VeriFactuDateTimeHelper;
-use jdg\Verifactu\Listas;
+namespace jdgOpenCode\verifactu\Models;
+use jdgOpenCode\verifactu\VeriFactuDateTimeHelper;
+use jdgOpenCode\verifactu\Listas;
 
 class RemisionVoluntaria
 {

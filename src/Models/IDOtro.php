@@ -1,7 +1,7 @@
 <?php
-namespace jdg\Verifactu\Models;
-use jdg\Verifactu\Listas;
-use jdg\Verifactu\VeriFactuStringHelper;
+namespace jdgOpenCode\verifactu\Models;
+use jdgOpenCode\verifactu\Listas;
+use jdgOpenCode\verifactu\VeriFactuStringHelper;
 
 class IDOtro
 {

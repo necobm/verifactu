@@ -4,11 +4,12 @@
     "type": "library",
     "keywords": ["verifactu", "iva", "igic", "facturación", "aeat", "hash"],
     "license": "MIT",
+    "homepage": "https://github.com/jdgOpenCode/verifactu",
     "authors": [
         {
             "name": "José David Guillén",
             "email": "jd@infdj.com",
-            "homepage": "https://git.jd.guillen.io/jdg/verifactu"
+            "homepage": "https://git.jd.guillen.io/jdg/cv"
         }
     ],
     "require": {
@@ -20,12 +21,12 @@
     },
     "autoload": {
         "psr-4": {
-            "jdg\\verifactu\\": "src/"
+            "jdgOpenCode\\verifactu\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "jdg\\verifactu\\Tests\\": "tests/"
+            "jdgOpenCode\\verifactu\\Tests\\": "tests/"
         }
     },
     "scripts": {

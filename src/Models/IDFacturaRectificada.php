@@ -1,5 +1,5 @@
 <?php
-namespace jdg\Verifactu\Models;
+namespace jdgOpenCode\verifactu\Models;
 
 class IDFacturaRectificada
 {

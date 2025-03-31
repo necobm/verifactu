@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-use jdg\Verifactu\VeriFactuDateTimeHelper;
+use jdgOpenCode\verifactu\VeriFactuDateTimeHelper;
 
 class VeriFactuDateTimeHelperTest extends TestCase
 {

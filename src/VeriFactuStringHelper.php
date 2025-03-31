@@ -1,5 +1,5 @@
 <?php
-namespace jdg\Verifactu;
+namespace jdgOpenCode\verifactu;
 
 class VeriFactuStringHelper
 {

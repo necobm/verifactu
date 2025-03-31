@@ -1,9 +1,9 @@
 <?php
 use PHPUnit\Framework\TestCase;
-use jdg\Verifactu\VeriFactuCertificateHelper;
-use jdg\Verifactu\VeriFactuRegistroFactura;
-use jdg\Verifactu\Models;
-use jdg\Verifactu\Listas;
+use jdgOpenCode\verifactu\VeriFactuCertificateHelper;
+use jdgOpenCode\verifactu\VeriFactuRegistroFactura;
+use jdgOpenCode\verifactu\Models;
+use jdgOpenCode\verifactu\Listas;
 
 // clear && ./vendor/bin/phpunit tests/VeriFactuRegistroFacturaTest.php
 class VeriFactuRegistroFacturaTest extends TestCase

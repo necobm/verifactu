@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-use jdg\Verifactu\VeriFactuStringHelper;
+use jdgOpenCode\verifactu\VeriFactuStringHelper;
 
 class VeriFactuStringHelperTest extends TestCase
 {

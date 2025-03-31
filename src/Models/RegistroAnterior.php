@@ -1,7 +1,7 @@
 <?php
-namespace jdg\Verifactu\Models;
-use jdg\Verifactu\VeriFactuStringHelper;
-use jdg\Verifactu\VeriFactuDateTimeHelper;
+namespace jdgOpenCode\verifactu\Models;
+use jdgOpenCode\verifactu\VeriFactuStringHelper;
+use jdgOpenCode\verifactu\VeriFactuDateTimeHelper;
 
 class RegistroAnterior
 {

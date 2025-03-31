@@ -1,6 +1,6 @@
 <?php
-namespace jdg\Verifactu\Models;
-use jdg\Verifactu\Listas;
+namespace jdgOpenCode\verifactu\Models;
+use jdgOpenCode\verifactu\Listas;
 
 class Desglose
 {

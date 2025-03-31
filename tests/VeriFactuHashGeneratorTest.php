@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-use jdg\Verifactu\VeriFactuHashGenerator;
+use jdgOpenCode\verifactu\VeriFactuHashGenerator;
 
 class VeriFactuHashGeneratorTest extends TestCase
 {

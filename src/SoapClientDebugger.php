@@ -1,5 +1,5 @@
 <?php
-namespace jdg\Verifactu;
+namespace jdgOpenCode\verifactu;
 
 class SoapClientDebugger extends \SoapClient {
     public $lastRequest;

@@ -1,9 +1,9 @@
 <?php
-namespace jdg\Verifactu\Models;
-use jdg\Verifactu\VeriFactuHashGenerator;
-use jdg\Verifactu\VeriFactuDateTimeHelper;
-use jdg\Verifactu\VeriFactuStringHelper;
-use jdg\Verifactu\Listas;
+namespace jdgOpenCode\verifactu\Models;
+use jdgOpenCode\verifactu\VeriFactuHashGenerator;
+use jdgOpenCode\verifactu\VeriFactuDateTimeHelper;
+use jdgOpenCode\verifactu\VeriFactuStringHelper;
+use jdgOpenCode\verifactu\Listas;
 
 class RegistroAlta
 {
