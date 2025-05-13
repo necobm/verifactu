@@ -40,14 +40,14 @@ class VeriFactuRegistroFactura
         $ret['hashes'] = [];
         foreach($dsRegistroVeriFactuAsArray['RegistroFactura'] as $registroFactura) {
             if (isset($registroFactura['RegistroAlta'])) {
-                $ret['hashes'] = [
+                $ret['hashes'][] = [
                     'NumSerieFactura' => $registroFactura['RegistroAlta']['IDFactura']['NumSerieFactura'],
                     'Huella' => $registroFactura['RegistroAlta']['Huella'],
                     'FechaHoraHusoGenRegistro' => $registroFactura['RegistroAlta']['FechaHoraHusoGenRegistro']
                 ];
             } else 
             if (isset($registroFactura['RegistroAnulacion'])) {
-                $ret['hashes'] = [
+                $ret['hashes'][] = [
                     'NumSerieFactura' => $registroFactura['RegistroAnulacion']['IDFactura']['NumSerieFactura'],
                     'Huella' => $registroFactura['RegistroAnulacion']['Huella'],
                     'FechaHoraHusoGenRegistro' => $registroFactura['RegistroAnulacion']['FechaHoraHusoGenRegistro']
