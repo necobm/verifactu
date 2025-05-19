@@ -211,7 +211,7 @@ class RegistroAlta
                 }
             }
             if ($this->CuotaTotal != $cuotaTotal) {
-                throw new \Exception('La suma de cuotas en los desgloses no coincide con la cuota total.');
+                throw new \Exception('La suma de cuotas ('.$this->CuotaTotal.') en los desgloses no coincide con la cuota total ('.$cuotaTotal.').');
             }
             $importeTotal = bcadd($cuotaTotal, $baseImponibleTotal, 2);
             if ($this->ImporteTotal != $importeTotal) {
