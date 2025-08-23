@@ -18,6 +18,7 @@ class VeriFactuRegistroFactura
             $this->wsdl = 'https://prewww2.aeat.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SistemaFacturacion.wsdl';
             $this->schemaBaseUrl = 'https://www1.agenciatributaria.gob.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP';
             // ToDo :: Extract the location from the WSDL
+            $this->location = 'https://www1.agenciatributaria.gob.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP';
             $this->location = 'https://prewww1.aeat.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP';
         } else {
             $this->wsdl = 'https://prewww2.aeat.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SistemaFacturacion.wsdl';
@@ -99,9 +100,12 @@ class VeriFactuRegistroFactura
         return $ret;
     } 
 /*
+https://sede.agenciatributaria.gob.es/Sede/iva/sistemas-informaticos-facturacion-verifactu/informacion-tecnica.html
+https://prewww2.aeat.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/errores.properties
 [response] => looks like we got no XML document
 [response] => SOAP-ERROR: Encoding: object has no 'Cabecera' property
 [response] => No se detecta certificado electrónico
 [response] => Codigo[103].NIF no identificado: 99999972C/EIDAS CERTIFICADO PRUEBAS
+[response] => Codigo[103].Error interno en el servidor  ¿certificado caducado?
 */
 }

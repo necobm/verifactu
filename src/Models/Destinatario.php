@@ -26,7 +26,7 @@ class Destinatario
             'NombreRazon' => VeriFactuStringHelper::sanitizeString($this->NombreRazon)
         ];
         if (($this->NIF==null && $this->IDOtro==null) || ($this->NIF!=null && $this->IDOtro!=null)) {
-            throw new \Exception('Desinatario requiere NIF ó IDOtro.');
+            throw new \Exception('Destinatario requiere NIF ó IDOtro.');
         }
         if ($this->NIF!=null) {
             $data['NIF'] = $this->NIF;

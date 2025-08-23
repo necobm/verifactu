@@ -33,8 +33,9 @@ class VeriFactuRegistroFacturaTest extends TestCase
      */
     public function testSend_Certificate_not_valid()
     {
-        $certificatePath = __DIR__.'/ACTIVO_EIDAS_CERTIFICADO_PRUEBAS___99999972C.p12';
-        $passphrase = '1234';
+        $certificatePath = '/root/jdg_expired_deleteme.p12';
+        $passphrase = file_get_contents('/root/jdg_expired_deleteme.pass');
+
         $tempCertPath = VeriFactuCertificateHelper::fileP12toPEM($certificatePath, $passphrase);
 
         list($dsRegistroVeriFactu, $hash, $timestampISO8601) = $this->getSampleData();
