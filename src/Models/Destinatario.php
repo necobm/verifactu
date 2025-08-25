@@ -14,7 +14,7 @@ class Destinatario
     public ?string $NIF = null;
     public ?IDOtro $IDOtro = null;
 
-    public function __construct(string $nif, ?string $nombreRazon=null, ?IDOtro $idOtro=null)
+    public function __construct(?string $nif, ?string $nombreRazon=null, ?IDOtro $idOtro=null)
     {
         $this->NIF = $nif;
         $this->NombreRazon = $nombreRazon;

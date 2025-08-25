@@ -1,4 +1,5 @@
 <?php
+
 namespace jdgOpenCode\verifactu;
 
 use jdgOpenCode\verifactu\VeriFactuDateTimeHelper;
@@ -33,13 +34,13 @@ class VeriFactuRegistroFactura
 
         try {
             $dsRegistroVeriFactuAsArray = $dsRegistroVeriFactu->toArray();
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $ret['status'] = 'fail';
             $ret['response'] = $e->getMessage();
             return $ret;
         }
         $ret['hashes'] = [];
-        foreach($dsRegistroVeriFactuAsArray['RegistroFactura'] as $registroFactura) {
+        foreach ($dsRegistroVeriFactuAsArray['RegistroFactura'] as $registroFactura) {
             if (isset($registroFactura['RegistroAlta'])) {
                 $ret['hashes'][] = [
                     'NumSerieFactura' => $registroFactura['RegistroAlta']['IDFactura']['NumSerieFactura'],
@@ -55,7 +56,7 @@ class VeriFactuRegistroFactura
                 ];
             } else {
                 throw new \Exception('The data contains a non valid "RegistroFactura" type.');
-            } 
+            }
         }
 
         $options = [
@@ -77,7 +78,7 @@ class VeriFactuRegistroFactura
             'use' => SOAP_LITERAL
         ];
 
-//      $client = new SoapClientDebugger($this->wsdl, $options);
+        //      $client = new SoapClientDebugger($this->wsdl, $options);
         try {
             $client = new \SoapClient($this->wsdl, $options);
             $client->__setLocation($this->location);
@@ -86,11 +87,11 @@ class VeriFactuRegistroFactura
             $ret['response'] = $client->__getLastResponse();
             $ret['status'] = 'sent';
         } catch (\SoapFault $e) {
-            if ( isset($client) ) {
+            if (isset($client)) {
                 $ret['request'] = $client->__getLastRequest();
                 $lastResponse = $client->__getLastResponse();
             }
-            if ( isset($lastResponse) && strpos($lastResponse, 'No se detecta certificado electr')!==false ) {
+            if (isset($lastResponse) && strpos($lastResponse, 'No se detecta certificado electr') !== false) {
                 $ret['response'] = 'No se detecta certificado electrónico';
             } else {
                 $ret['response'] = $e->getMessage();
@@ -98,8 +99,35 @@ class VeriFactuRegistroFactura
             $ret['status'] = 'fail';
         }
         return $ret;
-    } 
-/*
+    }
+
+    public static function checkResponse($xmlString)
+    {
+        try {
+            libxml_use_internal_errors(true);
+            $xml = simplexml_load_string($xmlString);
+            if ($xml === false) {
+                return ["error" => true, "mensaje" => "XML inválido"];
+            }
+            $namespaces = $xml->getNamespaces(true);
+            $body = $xml->children($namespaces['env'])->Body;
+            $respuesta = $body->children($namespaces['tikR'])->RespuestaRegFactuSistemaFacturacion;
+            $estadoEnvio = (string)$respuesta->children($namespaces['tikR'])->EstadoEnvio;
+            if ($estadoEnvio === "Incorrecto") {
+                $respuestaLinea = $respuesta->children($namespaces['tikR'])->RespuestaLinea;
+                $descripcionError = (string)$respuestaLinea->children($namespaces['tikR'])->DescripcionErrorRegistro;
+
+                return [
+                    "error" => true,
+                    "mensaje" => $descripcionError
+                ];
+            }
+        } catch (\Exception $ex) {
+            return ["error" => true, "mensaje" => $ex->getMessage()];
+        }
+        return ["error" => false, "mensaje" => null];
+    }
+    /*
 https://sede.agenciatributaria.gob.es/Sede/iva/sistemas-informaticos-facturacion-verifactu/informacion-tecnica.html
 https://prewww2.aeat.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/errores.properties
 [response] => looks like we got no XML document
@@ -107,5 +135,12 @@ https://prewww2.aeat.es/static_files/common/internet/dep/aplicaciones/es/aeat/ti
 [response] => No se detecta certificado electrónico
 [response] => Codigo[103].NIF no identificado: 99999972C/EIDAS CERTIFICADO PRUEBAS
 [response] => Codigo[103].Error interno en el servidor  ¿certificado caducado?
+
+[response] => Codigo[4104].Error en la cabecera: el valor del campo NIF del bloque ObligadoEmision no está identificado.. NIF:***. NOMBRE_RAZON:***
+              - El nombre_razon no estaba escrito igual que en el certificado digital.
+              - Tras corregir el nombre_razon, el envio se realizó correctamente (pero con errores).
+[respose]  => <tikR:CodigoErrorRegistro>1110</tikR:CodigoErrorRegistro><tikR:DescripcionErrorRegistro>Error en el bloque Destinatario.. El NIF no está identificado en el censo de la AEAT.. NIF:11111111H. NOMBRE_RAZON:Test customer.
+              - El NIF y nombre son inventados XD, tengo que buscar uno real.
+
 */
 }

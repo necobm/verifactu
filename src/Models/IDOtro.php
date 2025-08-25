@@ -18,6 +18,13 @@ class IDOtro
      */
     public string $ID;
 
+    public function __construct(Listas\L7 $idType, string $id, ?string $codigoPais = null)
+    {
+        $this->ID = $id;
+        $this->CodigoPais = $codigoPais;
+        $this->IDType = $idType;
+    }    
+
     public function toArray() {
         $data = [
             'IDType' => $this->IDType->value,
