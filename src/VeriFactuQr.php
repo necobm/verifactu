@@ -17,10 +17,7 @@ class VeriFactuQr
     {
         $baseUrl = $productionMode ? 'https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR' : 'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR';
         $formattedDate = $invoiceDate->format('d-m-Y');
-        $formattedAmount = number_format($amount, 2, '.', '');
-        while (substr($formattedAmount, -1) === '0' && strpos($formattedAmount, '.') !== false) {
-            $formattedAmount = substr($formattedAmount, 0, -1);
-        } 
+        $formattedAmount = rtrim(rtrim(number_format($amount, 2, '.', ''), '0'), '.');
         $encodedSerienum = urlencode($serienum);
         return sprintf('%s?nif=%s&numserie=%s&fecha=%s&importe=%s', $baseUrl, $nif, $encodedSerienum, $formattedDate, $formattedAmount);
     }
